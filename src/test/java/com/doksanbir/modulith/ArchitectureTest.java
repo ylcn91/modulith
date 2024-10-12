@@ -20,7 +20,6 @@ public class ArchitectureTest {
 
     @Test
     void no_cycles_between_packages() {
-
         for(var module : modules) {
            System.out.println("Module: " + module.getName() + " : "+ module.getBasePackage());
         }
