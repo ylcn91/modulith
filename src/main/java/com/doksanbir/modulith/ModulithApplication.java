@@ -6,7 +6,6 @@ import org.springframework.modulith.Modulith;
 import org.springframework.retry.annotation.EnableRetry;
 
 @SpringBootApplication
-@Modulith
 @EnableRetry
 public class ModulithApplication {
 
