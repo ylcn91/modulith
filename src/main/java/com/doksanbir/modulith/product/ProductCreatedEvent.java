@@ -1,4 +1,4 @@
-package com.doksanbir.modulith.product.application;
+package com.doksanbir.modulith.product;
 
 public record ProductCreatedEvent (Long productId){
 }

@@ -17,23 +17,14 @@ public class ArchitectureTest {
             ApplicationModules.of(ModulithApplication.class, IGNORED_MODULES);
 
 
-    @Test
-    void generateDiagrams() {
-        new Documenter(modules)
-                .writeModulesAsPlantUml()
-                .writeIndividualModulesAsPlantUml();
-    }
 
     @Test
-    void encapsulated_and_withoutCycles() {
+    void no_cycles_between_packages() {
 
         for(var module : modules) {
            System.out.println("Module: " + module.getName() + " : "+ module.getBasePackage());
         }
-        // 1. modules only access each others' root package (or explicitly allowed packages)
-        // 2. no cycles between modules
         modules.verify();
-        // Note: this test runs even after split in Maven modules
     }
 
 }
