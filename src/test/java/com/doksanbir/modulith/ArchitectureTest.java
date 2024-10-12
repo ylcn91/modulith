@@ -240,18 +240,20 @@ public class ArchitectureTest {
                     .because("Publishers should not depend on listeners to avoid cyclic dependencies")
                     .check(importedClasses);
         }
+
+        @Test
+        @DisplayName("All event handler methods should be annotated with @ApplicationModuleListener")
+        void all_event_handler_methods_should_be_annotated() {
+            methods()
+                    .that().areDeclaredInClassesThat().resideInAPackage("..inventory.application.service..")
+                    .and().haveNameStartingWith("handle")
+                    .should().beAnnotatedWith(ApplicationModuleListener.class)
+                    .because("All event handler methods should be annotated with @ApplicationModuleListener")
+                    .check(importedClasses);
+        }
     }
 
-    @Test
-    @DisplayName("All event handler methods should be annotated with @ApplicationModuleListener")
-    void all_event_handler_methods_should_be_annotated() {
-        methods()
-                .that().areDeclaredInClassesThat().resideInAPackage("..inventory.application.service..")
-                .and().haveNameStartingWith("handle")
-                .should().beAnnotatedWith(ApplicationModuleListener.class)
-                .because("All event handler methods should be annotated with @ApplicationModuleListener")
-                .check(importedClasses);
-    }
+
 
 
 

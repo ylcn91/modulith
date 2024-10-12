@@ -21,4 +21,7 @@ public class Inventory {
 
     private Long productId;
     private Integer quantity;
+
+    @Version
+    private Integer version;
 }

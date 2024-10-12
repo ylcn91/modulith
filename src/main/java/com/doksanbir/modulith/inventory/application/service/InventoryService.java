@@ -6,9 +6,12 @@ import com.doksanbir.modulith.inventory.domain.model.Inventory;
 import com.doksanbir.modulith.inventory.web.dto.InventoryDTO;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
 import com.doksanbir.modulith.shared.events.*;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,11 @@ class InventoryService implements InventoryUseCase {
     }
 
     @Override
+    @Retryable(
+            retryFor = OptimisticLockException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100, multiplier = 2)
+    )
     public void updateInventory(Long productId, Integer quantity) {
         log.info("Updating inventory for productId: {}, quantity: {}", productId, quantity);
         Inventory inventory = inventoryRepositoryPort.findByProductId(productId)
