@@ -1,7 +1,7 @@
 package com.doksanbir.modulith.product.application.service;
 
 import com.doksanbir.modulith.product.*;
-import com.doksanbir.modulith.product.ProductCreatedEvent;
+import com.doksanbir.modulith.product.application.ProductCreatedEvent;
 import com.doksanbir.modulith.product.application.port.in.ProductUseCase;
 import com.doksanbir.modulith.product.application.port.out.ProductRepositoryPort;
 import com.doksanbir.modulith.product.domain.Product;
