@@ -5,7 +5,7 @@ import com.doksanbir.modulith.inventory.application.port.out.InventoryRepository
 import com.doksanbir.modulith.inventory.domain.model.Inventory;
 import com.doksanbir.modulith.inventory.web.dto.InventoryDTO;
 import com.doksanbir.modulith.product.*;
-import com.doksanbir.modulith.product.application.ProductCreatedEvent;
+import com.doksanbir.modulith.product.ProductCreatedEvent;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
