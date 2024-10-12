@@ -4,10 +4,10 @@ import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 @Getter
-public class ProductUpdatedEvent extends ApplicationEvent {
+public class ProductDiscontinuedEvent extends ApplicationEvent {
     private final Long productId;
 
-    public ProductUpdatedEvent(Object source, Long productId) {
+    public ProductDiscontinuedEvent(Object source, Long productId) {
         super(source);
         this.productId = productId;
     }

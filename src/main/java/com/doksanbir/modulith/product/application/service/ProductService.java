@@ -2,10 +2,9 @@ package com.doksanbir.modulith.product.application.service;
 
 import com.doksanbir.modulith.product.application.port.in.ProductUseCase;
 import com.doksanbir.modulith.product.application.port.out.ProductRepositoryPort;
-import com.doksanbir.modulith.product.domain.event.ProductCreatedEvent;
-import com.doksanbir.modulith.product.domain.event.ProductDeletedEvent;
-import com.doksanbir.modulith.product.domain.event.ProductUpdatedEvent;
+import com.doksanbir.modulith.product.domain.event.*;
 import com.doksanbir.modulith.product.domain.model.Product;
+import com.doksanbir.modulith.product.domain.model.ProductStatus;
 import com.doksanbir.modulith.product.web.dto.ProductDTO;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +33,7 @@ public class ProductService implements ProductUseCase {
                 .description(productDTO.description())
                 .price(productDTO.price())
                 .stockQuantity(productDTO.stockQuantity())
+                .status(ProductStatus.ACTIVE) // Set default status
                 .build();
         Product savedProduct = productRepositoryPort.save(product);
         eventPublisher.publishEvent(new ProductCreatedEvent(this, savedProduct.getId()));
@@ -42,9 +42,10 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProductDTO getProductById(Long id) {
         Product product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(id));
         return mapToDTO(product);
     }
 
@@ -61,12 +62,21 @@ public class ProductService implements ProductUseCase {
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Product existingProduct = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
-        existingProduct.setName(productDTO.name());
-        existingProduct.setDescription(productDTO.description());
-        existingProduct.setPrice(productDTO.price());
-        existingProduct.setStockQuantity(productDTO.stockQuantity());
+
+        // Capture original state
+        ProductStatus oldStatus = existingProduct.getStatus();
+        Integer oldStockQuantity = existingProduct.getStockQuantity();
+
+        // Update product fields
+        updateProductFields(existingProduct, productDTO);
+
+        // Save updated product
         Product updatedProduct = productRepositoryPort.save(existingProduct);
-        eventPublisher.publishEvent(new ProductUpdatedEvent(this, updatedProduct.getId()));
+
+        // Publish relevant events based on changes
+        publishStatusChangeEvents(oldStatus, updatedProduct.getStatus(), updatedProduct.getId());
+        publishStockChangeEvent(oldStockQuantity, updatedProduct.getStockQuantity(), updatedProduct.getId());
+
         return mapToDTO(updatedProduct);
     }
 
@@ -74,6 +84,8 @@ public class ProductService implements ProductUseCase {
     @Transactional
     public void deleteProduct(Long id) {
         log.info("Deleting product with id: {}", id);
+        Product existingProduct = productRepositoryPort.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
         productRepositoryPort.deleteById(id);
         eventPublisher.publishEvent(new ProductDeletedEvent(this, id));
     }
@@ -84,7 +96,37 @@ public class ProductService implements ProductUseCase {
                 product.getName(),
                 product.getDescription(),
                 product.getPrice(),
-                product.getStockQuantity()
+                product.getStockQuantity(),
+                product.getStatus()
         );
+    }
+
+    private void updateProductFields(Product product, ProductDTO productDTO) {
+        product.setName(productDTO.name());
+        product.setDescription(productDTO.description());
+        product.setPrice(productDTO.price());
+        product.setStockQuantity(productDTO.stockQuantity());
+        product.setStatus(productDTO.status());
+    }
+
+    private void publishStatusChangeEvents(ProductStatus oldStatus, ProductStatus newStatus, Long productId) {
+        if (!oldStatus.equals(newStatus)) {
+            switch (newStatus) {
+                case DISCONTINUED:
+                    eventPublisher.publishEvent(new ProductDiscontinuedEvent(this, productId));
+                    break;
+                case ACTIVE:
+                    eventPublisher.publishEvent(new ProductReactivatedEvent(this, productId));
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void publishStockChangeEvent(Integer oldStock, Integer newStock, Long productId) {
+        if (!oldStock.equals(newStock)) {
+            eventPublisher.publishEvent(new ProductStockUpdatedEvent(this, productId, newStock));
+        }
     }
 }
