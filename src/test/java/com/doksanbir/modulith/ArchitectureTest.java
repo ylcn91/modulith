@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.modulith.core.ApplicationModules;
+import org.springframework.modulith.docs.Documenter;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -38,6 +40,26 @@ public class ArchitectureTest {
                 System.out.println("Module: " + module.getName() + " : " + module.getBasePackage());
             }
             modules.verify();
+        }
+
+        // Uncomment the following test to generate PlantUML diagrams and Asciidoc documentation
+        @Test
+        void generateDiagrams() {
+            new Documenter(modules)
+                    .writeModulesAsPlantUml()
+                    .writeIndividualModulesAsPlantUml();
+        }
+
+        // Uncomment the following test to generate Asciidoc documentation
+        @Test
+        void generateAsciidoc() {
+            var canvasOptions = Documenter.CanvasOptions.defaults();
+
+            var docOptions = Documenter.DiagramOptions.defaults()
+                    .withStyle(Documenter.DiagramOptions.DiagramStyle.UML);
+
+            new Documenter(modules) //
+                    .writeDocumentation(docOptions, canvasOptions);
         }
 
         @Test
@@ -219,5 +241,18 @@ public class ArchitectureTest {
                     .check(importedClasses);
         }
     }
+
+    @Test
+    @DisplayName("All event handler methods should be annotated with @ApplicationModuleListener")
+    void all_event_handler_methods_should_be_annotated() {
+        methods()
+                .that().areDeclaredInClassesThat().resideInAPackage("..inventory.application.service..")
+                .and().haveNameStartingWith("handle")
+                .should().beAnnotatedWith(ApplicationModuleListener.class)
+                .because("All event handler methods should be annotated with @ApplicationModuleListener")
+                .check(importedClasses);
+    }
+
+
 
 }

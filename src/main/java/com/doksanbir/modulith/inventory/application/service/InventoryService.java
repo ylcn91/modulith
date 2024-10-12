@@ -31,7 +31,6 @@ class InventoryService implements InventoryUseCase {
     }
 
     @Override
-    @Transactional
     public void updateInventory(Long productId, Integer quantity) {
         log.info("Updating inventory for productId: {}, quantity: {}", productId, quantity);
         Inventory inventory = inventoryRepositoryPort.findByProductId(productId)
