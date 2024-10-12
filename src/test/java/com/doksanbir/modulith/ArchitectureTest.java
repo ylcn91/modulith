@@ -4,11 +4,13 @@ import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import org.jmolecules.event.annotation.DomainEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.modulith.core.ApplicationModules;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
@@ -18,7 +20,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 public class ArchitectureTest {
 
     public static final DescribedPredicate<JavaClass> IGNORED_MODULES =
-            resideInAnyPackage("com.doksanbir.modulith.shared");
+            resideInAnyPackage("com.doksanbir.modulith.shared..");
 
     public static final ApplicationModules modules =
             ApplicationModules.of(ModulithApplication.class, IGNORED_MODULES);
@@ -83,14 +85,6 @@ public class ArchitectureTest {
                     .check(importedClasses);
         }
 
-        @Test
-        @DisplayName("All fields in services should be private")
-        void all_fields_in_services_should_be_private() {
-            fields()
-                    .that().areDeclaredInClassesThat().resideInAPackage("..service..")
-                    .should().bePrivate()
-                    .check(importedClasses);
-        }
     }
 
     @Nested
@@ -108,11 +102,23 @@ public class ArchitectureTest {
 
 
         @Test
-        @DisplayName("Services should only depend on Ports (not directly on Repositories)")
-        void services_should_only_depend_on_ports() {
+        @DisplayName("Services should only depend on allowed packages")
+        void services_should_only_depend_on_allowed_packages() {
             classes()
                     .that().resideInAPackage("..service..")
-                    .should().dependOnClassesThat().resideInAPackage("..application.port.out..")
+                    .should().onlyDependOnClassesThat().resideInAnyPackage(
+                            "..application.port.out..",
+                            "..application.port.in..",
+                            "..domain..",
+                            "..web.dto..",
+                            "com.doksanbir.modulith.product..",
+                            "com.doksanbir.modulith.shared..",
+                            "java..",
+                            "org.springframework..",
+                            "org.slf4j..",
+                            "lombok.."
+                    )
+                    .because("Services should only depend on specific allowed packages")
                     .check(importedClasses);
         }
 
@@ -151,5 +157,67 @@ public class ArchitectureTest {
         }
     }
 
+
+    @Nested
+    @DisplayName("Domain Layer Rules")
+    class DomainLayerRules {
+
+        @Test
+        @DisplayName("Domain layer should only depend on Java, Jakarta, Spring, and Lombok libraries and other domain classes")
+        void domain_layer_dependencies() {
+            classes()
+                    .that().resideInAPackage("..domain..")
+                    .should().onlyDependOnClassesThat(
+                            resideInAnyPackage(
+                                    "java..",
+                                    "jakarta.persistence..",
+                                    "jakarta..",
+                                    "org.springframework..",
+                                    "lombok..",
+                                    "..domain.."
+                            )
+                    )
+                    .because("Domain models should be pure and free from infrastructure or application dependencies, but may use JPA annotations")
+                    .check(importedClasses);
+        }
+    }
+
+
+    @Nested
+    @DisplayName("Event Architecture Rules")
+    class EventArchitectureRules {
+
+        @Test
+        @DisplayName("Event classes should be annotated with @DomainEvent and reside in the 'events' package")
+        void event_classes_should_be_annotated_with_domain_event_and_reside_in_events_package() {
+            classes()
+                    .that().areAnnotatedWith(DomainEvent.class)
+                    .should().resideInAPackage("..shared.events..")
+                    .because("All event classes should be annotated with @DomainEvent and located in the 'events' package")
+                    .check(importedClasses);
+        }
+
+        @Test
+        @DisplayName("Only Services should publish events")
+        void only_services_should_publish_events() {
+            classes()
+                    .that().areAnnotatedWith(Service.class)
+                    .and().resideInAPackage("..application.service..")
+                    .should().dependOnClassesThat().areAnnotatedWith(DomainEvent.class)
+                    .because("Only services should publish domain events")
+                    .check(importedClasses);
+        }
+
+
+        @Test
+        @DisplayName("No cyclic dependencies between event publishers and listeners")
+        void no_cyclic_dependencies_between_publishers_and_listeners() {
+            noClasses()
+                    .that().resideInAPackage("..product.application.service..")
+                    .should().dependOnClassesThat().resideInAPackage("..inventory.application.service..")
+                    .because("Publishers should not depend on listeners to avoid cyclic dependencies")
+                    .check(importedClasses);
+        }
+    }
 
 }

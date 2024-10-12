@@ -4,12 +4,10 @@ import com.doksanbir.modulith.inventory.application.port.in.InventoryUseCase;
 import com.doksanbir.modulith.inventory.application.port.out.InventoryRepositoryPort;
 import com.doksanbir.modulith.inventory.domain.model.Inventory;
 import com.doksanbir.modulith.inventory.web.dto.InventoryDTO;
-import com.doksanbir.modulith.product.*;
-import com.doksanbir.modulith.product.ProductCreatedEvent;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
+import com.doksanbir.modulith.shared.events.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 class InventoryService implements InventoryUseCase {
 
     private final InventoryRepositoryPort inventoryRepositoryPort;
-
-    //TODO: check if this is necessary later.
-    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public void initializeInventory(Long productId, Integer quantity) {

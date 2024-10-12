@@ -1,13 +1,12 @@
 package com.doksanbir.modulith.product.application.service;
 
-import com.doksanbir.modulith.product.*;
-import com.doksanbir.modulith.product.ProductCreatedEvent;
 import com.doksanbir.modulith.product.application.port.in.ProductUseCase;
 import com.doksanbir.modulith.product.application.port.out.ProductRepositoryPort;
 import com.doksanbir.modulith.product.domain.Product;
 import com.doksanbir.modulith.product.domain.ProductStatus;
 import com.doksanbir.modulith.product.web.dto.ProductDTO;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
+import com.doksanbir.modulith.shared.events.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
