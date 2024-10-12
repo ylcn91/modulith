@@ -17,7 +17,11 @@ public class ArchitectureTest {
             ApplicationModules.of(ModulithApplication.class, IGNORED_MODULES);
 
 
-
+    /*
+        * This test verifies that there are no cycles between packages.
+        * This is important to ensure that the codebase is maintainable and that the packages are well structured.
+        * The test will fail if there are cycles between packages.
+     */
     @Test
     void no_cycles_between_packages() {
         for(var module : modules) {
