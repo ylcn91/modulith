@@ -1,6 +1,6 @@
 package com.doksanbir.modulith.product.web.dto;
 
-import com.doksanbir.modulith.product.domain.model.ProductStatus;
+import com.doksanbir.modulith.product.domain.ProductStatus;
 
 import java.math.BigDecimal;
 

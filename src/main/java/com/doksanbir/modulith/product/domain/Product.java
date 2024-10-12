@@ -1,4 +1,4 @@
-package com.doksanbir.modulith.product.domain.model;
+package com.doksanbir.modulith.product.domain;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -2,7 +2,7 @@ package com.doksanbir.modulith.product.infrastructure.adapter;
 
 import com.doksanbir.modulith.product.infrastructure.repository.JpaProductRepository;
 import com.doksanbir.modulith.product.application.port.out.ProductRepositoryPort;
-import com.doksanbir.modulith.product.domain.model.Product;
+import com.doksanbir.modulith.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

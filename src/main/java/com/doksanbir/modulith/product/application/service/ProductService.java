@@ -1,10 +1,11 @@
 package com.doksanbir.modulith.product.application.service;
 
+import com.doksanbir.modulith.product.*;
+import com.doksanbir.modulith.product.application.ProductCreatedEvent;
 import com.doksanbir.modulith.product.application.port.in.ProductUseCase;
 import com.doksanbir.modulith.product.application.port.out.ProductRepositoryPort;
-import com.doksanbir.modulith.product.domain.event.*;
-import com.doksanbir.modulith.product.domain.model.Product;
-import com.doksanbir.modulith.product.domain.model.ProductStatus;
+import com.doksanbir.modulith.product.domain.Product;
+import com.doksanbir.modulith.product.domain.ProductStatus;
 import com.doksanbir.modulith.product.web.dto.ProductDTO;
 import com.doksanbir.modulith.shared.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 @Slf4j
 public class ProductService implements ProductUseCase {
 
@@ -25,7 +27,6 @@ public class ProductService implements ProductUseCase {
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
-    @Transactional
     public ProductDTO createProduct(ProductDTO productDTO) {
         log.info("Creating product: {}", productDTO);
         Product product = Product.builder()
@@ -33,10 +34,10 @@ public class ProductService implements ProductUseCase {
                 .description(productDTO.description())
                 .price(productDTO.price())
                 .stockQuantity(productDTO.stockQuantity())
-                .status(ProductStatus.ACTIVE) // Set default status
+                .status(ProductStatus.ACTIVE)
                 .build();
         Product savedProduct = productRepositoryPort.save(product);
-        eventPublisher.publishEvent(new ProductCreatedEvent(this, savedProduct.getId()));
+        eventPublisher.publishEvent(new ProductCreatedEvent(savedProduct.getId()));
         log.info("Product created: {}", savedProduct);
         return mapToDTO(savedProduct);
     }
@@ -58,7 +59,6 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
-    @Transactional
     public ProductDTO updateProduct(Long id, ProductDTO productDTO) {
         Product existingProduct = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
@@ -81,13 +81,12 @@ public class ProductService implements ProductUseCase {
     }
 
     @Override
-    @Transactional
     public void deleteProduct(Long id) {
         log.info("Deleting product with id: {}", id);
         Product existingProduct = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
         productRepositoryPort.deleteById(id);
-        eventPublisher.publishEvent(new ProductDeletedEvent(this, id));
+        eventPublisher.publishEvent(new ProductDeletedEvent(id));
     }
 
     private ProductDTO mapToDTO(Product product) {
@@ -113,10 +112,10 @@ public class ProductService implements ProductUseCase {
         if (!oldStatus.equals(newStatus)) {
             switch (newStatus) {
                 case DISCONTINUED:
-                    eventPublisher.publishEvent(new ProductDiscontinuedEvent(this, productId));
+                    eventPublisher.publishEvent(new ProductDiscontinuedEvent(productId));
                     break;
                 case ACTIVE:
-                    eventPublisher.publishEvent(new ProductReactivatedEvent(this, productId));
+                    eventPublisher.publishEvent(new ProductReactivatedEvent(productId));
                     break;
                 default:
                     break;
@@ -126,7 +125,7 @@ public class ProductService implements ProductUseCase {
 
     private void publishStockChangeEvent(Integer oldStock, Integer newStock, Long productId) {
         if (!oldStock.equals(newStock)) {
-            eventPublisher.publishEvent(new ProductStockUpdatedEvent(this, productId, newStock));
+            eventPublisher.publishEvent(new ProductStockUpdatedEvent(productId, newStock));
         }
     }
 }

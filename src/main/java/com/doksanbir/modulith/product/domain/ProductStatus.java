@@ -1,4 +1,4 @@
-package com.doksanbir.modulith.product.domain.model;
+package com.doksanbir.modulith.product.domain;
 
 public enum ProductStatus {
     ACTIVE,
