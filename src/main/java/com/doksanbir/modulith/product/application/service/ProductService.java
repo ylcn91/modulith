@@ -109,16 +109,15 @@ public class ProductService implements ProductUseCase {
 
     private void publishStatusChangeEvents(ProductStatus oldStatus, ProductStatus newStatus, Long productId) {
         if (!oldStatus.equals(newStatus)) {
-            switch (newStatus) {
-                case DISCONTINUED:
-                    eventPublisher.publishEvent(new ProductDiscontinuedEvent(productId));
-                    break;
-                case ACTIVE:
-                    eventPublisher.publishEvent(new ProductReactivatedEvent(productId));
-                    break;
-                default:
-                    break;
-            }
+            publishEventForNewStatus(newStatus, productId);
+        }
+    }
+
+    private void publishEventForNewStatus(ProductStatus newStatus, Long productId) {
+        switch (newStatus) {
+            case DISCONTINUED -> eventPublisher.publishEvent(new ProductDiscontinuedEvent(productId));
+            case ACTIVE -> eventPublisher.publishEvent(new ProductReactivatedEvent(productId));
+            default -> {}
         }
     }
 
