@@ -18,8 +18,8 @@ public class InventoryController {
     @GetMapping("/{productId}")
     public ResponseEntity<Integer> getInventory(@PathVariable Long productId) {
         log.info("Fetching inventory for productId: {}", productId);
-        int quantity = inventoryUseCase.getInventoryByProductId(productId).quantity(); // Just return the quantity
-        return ResponseEntity.ok(quantity); // Exposing just the quantity as a primitive
+        int quantity = inventoryUseCase.getInventoryByProductId(productId).quantity();
+        return ResponseEntity.ok(quantity);
     }
 
     @PutMapping("/{productId}")
