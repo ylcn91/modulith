@@ -16,16 +16,16 @@ public class InventoryController {
     private final InventoryUseCase inventoryUseCase;
 
     @GetMapping("/{productId}")
-    public ResponseEntity<InventoryDTO> getInventory(@PathVariable Long productId) {
+    public ResponseEntity<Integer> getInventory(@PathVariable Long productId) {
         log.info("Fetching inventory for productId: {}", productId);
-        InventoryDTO inventory = inventoryUseCase.getInventoryByProductId(productId);
-        return ResponseEntity.ok(inventory);
+        int quantity = inventoryUseCase.getInventoryByProductId(productId).quantity(); // Just return the quantity
+        return ResponseEntity.ok(quantity); // Exposing just the quantity as a primitive
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<Void> updateInventory(@PathVariable Long productId, @RequestBody InventoryDTO inventoryDTO) {
+    public ResponseEntity<Void> updateInventory(@PathVariable Long productId, @RequestBody int quantity) {
         log.info("Updating inventory for productId: {}", productId);
-        inventoryUseCase.updateInventory(productId, inventoryDTO.quantity());
+        inventoryUseCase.updateInventory(productId, quantity);
         return ResponseEntity.noContent().build();
     }
 }
