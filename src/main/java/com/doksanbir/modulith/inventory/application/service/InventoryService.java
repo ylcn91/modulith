@@ -56,44 +56,20 @@ class InventoryService implements InventoryUseCase {
         return mapToDTO(inventory);
     }
 
-    // Event Listeners
 
     @ApplicationModuleListener
-    void handleProductCreated(ProductCreatedEvent event) {
-        log.info("Received ProductCreatedEvent for productId: {}", event.productId());
-        initializeInventory(event.productId(), 0);
+    void handleProductEvent(Object event) {
+        log.info("Received event: {}", event.getClass().getSimpleName());
+        switch (event) {
+            case ProductCreatedEvent e -> initializeInventory(e.productId(), 0);
+            case ProductDeletedEvent e -> inventoryRepositoryPort.deleteByProductId(e.productId());
+            case ProductDiscontinuedEvent e -> inventoryRepositoryPort.deleteByProductId(e.productId());
+            case ProductReactivatedEvent e -> initializeInventory(e.productId(), 0);
+            case ProductStockUpdatedEvent e -> updateInventory(e.productId(), e.stockChange());
+            default -> log.warn("Unhandled event type: {}", event.getClass().getSimpleName());
+        }
     }
 
-    @ApplicationModuleListener
-    public void handleProductDeleted(ProductDeletedEvent event) {
-        log.info("Received ProductDeletedEvent for productId: {}", event.productId());
-        inventoryRepositoryPort.deleteByProductId(event.productId());
-
-    }
-
-    @ApplicationModuleListener
-    public void handleProductDiscontinued(ProductDiscontinuedEvent event) {
-        log.info("Received ProductDiscontinuedEvent for productId: {}", event.productId());
-        inventoryRepositoryPort.deleteByProductId(event.productId());
-    }
-
-    @ApplicationModuleListener
-    public void handleProductReactivated(ProductReactivatedEvent event) {
-        log.info("Received ProductReactivatedEvent for productId: {}", event.productId());
-        initializeInventory(event.productId(), 0);
-    }
-
-    /*
-    @Async
-    @EventListener
-    @TransactionalEventListener
-     */
-    @ApplicationModuleListener
-    public void handleProductStockUpdated(ProductStockUpdatedEvent event) {
-        log.info("Received ProductStockUpdatedEvent for productId: {}, updatedStockQuantity: {}",
-                event.productId(), event.stockChange());
-        updateInventory(event.productId(), event.stockChange());
-    }
 
     private InventoryDTO mapToDTO(Inventory inventory) {
         return new InventoryDTO(
